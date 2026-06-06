@@ -1,43 +1,91 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Absensi Online Geolocation</title>
-    <style>
-        body { font-family: Arial, sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; background-color: #f4f4f4; }
-        .container { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); width: 100%; max-width: 400px; text-align: center; }
-        #camera { width: 100%; border-radius: 10px; background: #ddd; margin-bottom: 10px; }
-        #canvas { display: none; }
-        .status { margin: 10px 0; font-weight: bold; }
-        .success { color: green; }
-        .error { color: red; }
-        button { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; width: 100%; font-size: 16px; }
-        button:disabled { background: #ccc; cursor: not-allowed; }
-        #preview { width: 100%; border-radius: 10px; margin-top: 10px; display: none; }
-    </style>
-</head>
-<body>
+// GANTI DENGAN KOORDINAT KANTOR ANDA
+const OFFICE_LAT = 6.2146; 
+const OFFICE_LNG = 106.8451;
+const MAX_DISTANCE = 100; // Meter
 
-<div class="container">
-    <h2>Absensi Online</h2>
+const video = document.getElementById('camera');
+const canvas = document.getElementById('canvas');
+const preview = document.getElementById('preview');
+const btnAbsen = document.getElementById('btn-absen');
+const locStatus = document.getElementById('location-status');
+
+// Fungsi Setup Kamera
+async function setupCamera() {
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+            video: { facingMode: "user" }, 
+            audio: false 
+        });
+        video.srcObject = stream;
+        console.log("Kamera aktif");
+    } catch (err) {
+        locStatus.innerHTML = "<span class='error'>Gagal akses kamera!</span>";
+        console.error(err);
+    }
+}
+
+// Fungsi Hitung Jarak (Haversine yang lebih aman)
+function getDistance(lat1, lon1, lat2, lon2) {
+    const R = 6371000; // Jari-jari bumi dalam meter
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+              Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+}
+
+// Fungsi Cek Lokasi
+function checkLocation() {
+    if (!navigator.geolocation) {
+        locStatus.innerHTML = "Browser tidak mendukung GPS";
+        return;
+    }
+
+    locStatus.innerHTML = "Sedang mendapatkan koordinat...";
+
+    navigator.geolocation.getCurrentPosition(
+        (position) => {
+            const uLat = position.coords.latitude;
+            const uLng = position.coords.longitude;
+            const dist = getDistance(uLat, uLng, OFFICE_LAT, OFFICE_LNG);
+
+            console.log("User Lat:", uLat, "User Lng:", uLng, "Jarak:", dist);
+
+            if (dist <= MAX_DISTANCE) {
+                locStatus.innerHTML = `<span class='success'>LOKASI TERVERIFIKASI (${Math.round(dist)}m)</span>`;
+                btnAbsen.disabled = false;
+                document.getElementById('lat').value = uLat;
+                document.getElementById('lng').value = uLng;
+            } else {
+                locStatus.innerHTML = `<span class='error'>DI LUAR RADIUS (${Math.round(dist)}m)</span>`;
+                btnAbsen.disabled = true;
+            }
+        },
+        (err) => {
+            locStatus.innerHTML = `<span class='error'>GPS Error: ${err.message}</span>`;
+        },
+        { enableHighAccuracy: true, timeout: 10000 }
+    );
+}
+
+// Tombol Ambil Foto
+btnAbsen.addEventListener('click', () => {
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext('2d').drawImage(video, 0, 0);
     
-    <!-- Video Kamera -->
-    <video id="camera" autoplay playsinline></video>
-    <canvas id="canvas"></canvas>
-    <img id="preview" alt="Preview Foto">
-
-    <div id="location-status" class="status">Mengecek Lokasi...</div>
+    const photoData = canvas.toDataURL('image/png');
+    preview.src = photoData;
+    preview.style.display = 'block';
+    video.style.display = 'none';
     
-    <form id="absensiForm">
-        <input type="hidden" id="lat">
-        <input type="hidden" id="lng">
-        <input type="hidden" id="photo">
-        
-        <button type="button" id="btn-absen" disabled>Ambil Foto & Absen</button>
-    </form>
-</div>
+    alert("Absensi Berhasil!");
+});
 
-<script src="script.js"></script>
-</body>
-</html>
+// Jalankan saat halaman dibuka
+window.addEventListener('DOMContentLoaded', () => {
+    setupCamera();
+    checkLocation();
+});
