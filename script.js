@@ -1,6 +1,6 @@
 // GANTI DENGAN KOORDINAT KANTOR ANDA
-const OFFICE_LAT = -6.2146; 
-const OFFICE_LNG = 106.8451;
+const OFFICE_LAT = 6.62789935070247; 
+const OFFICE_LNG = 106.29401655211633;
 const MAX_DISTANCE = 100; // Meter
 
 const video = document.getElementById('camera');
