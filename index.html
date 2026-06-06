@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Absensi Online Geolocation</title>
+    <style>
+        body { font-family: Arial, sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; background-color: #f4f4f4; }
+        .container { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); width: 100%; max-width: 400px; text-align: center; }
+        #camera { width: 100%; border-radius: 10px; background: #ddd; margin-bottom: 10px; }
+        #canvas { display: none; }
+        .status { margin: 10px 0; font-weight: bold; }
+        .success { color: green; }
+        .error { color: red; }
+        button { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; width: 100%; font-size: 16px; }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+        #preview { width: 100%; border-radius: 10px; margin-top: 10px; display: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Absensi Online</h2>
+    
+    <!-- Video Kamera -->
+    <video id="camera" autoplay playsinline></video>
+    <canvas id="canvas"></canvas>
+    <img id="preview" alt="Preview Foto">
+
+    <div id="location-status" class="status">Mengecek Lokasi...</div>
+    
+    <form id="absensiForm">
+        <input type="hidden" id="lat">
+        <input type="hidden" id="lng">
+        <input type="hidden" id="photo">
+        
+        <button type="button" id="btn-absen" disabled>Ambil Foto & Absen</button>
+    </form>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
